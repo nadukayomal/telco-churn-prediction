@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "telco-churn-prediction"
@@ -30,6 +30,7 @@ dependencies = [
     "loguru>=0.7",
     "joblib>=1.3",
     "scipy>=1.12",
+    "ipykernel"
 ]
 
 [project.optional-dependencies]
