@@ -2,11 +2,11 @@
 
 > End-to-end ML system for predicting telecom customer churn — built to industrial standards with modular pipelines, experiment tracking, explainability, and a REST API serving layer.
 
-[![CI](https://github.com/your-org/telco-churn-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/telco-churn-prediction/actions)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![MLflow](https://img.shields.io/badge/tracking-MLflow-blue)](https://mlflow.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[CI](https://github.com/your-org/telco-churn-prediction/actions)
+[Python 3.10+](https://www.python.org/)
+[Code style: ruff](https://github.com/astral-sh/ruff)
+[MLflow](https://mlflow.org/)
+[License: MIT](LICENSE)
 
 ---
 
@@ -44,13 +44,15 @@ This project builds a production-grade churn prediction system that:
 
 **Source:** [IBM Telco Customer Churn — Kaggle](https://www.kaggle.com/datasets/blastchar/telco-customer-churn/data)
 
-| Property | Value |
-|---|---|
-| Records | 7,043 customers |
-| Features | 21 (demographics, services, billing) |
-| Target | `Churn` — Yes / No |
-| Churn rate | ~26.5% (class imbalance present) |
+
+| Property    | Value                                                               |
+| ----------- | ------------------------------------------------------------------- |
+| Records     | 7,043 customers                                                     |
+| Features    | 21 (demographics, services, billing)                                |
+| Target      | `Churn` — Yes / No                                                  |
+| Churn rate  | ~26.5% (class imbalance present)                                    |
 | Known issue | `TotalCharges` stored as string with blank values for new customers |
+
 
 Feature groups:
 
@@ -314,12 +316,14 @@ The FastAPI app loads the registered model at startup.
 
 **Endpoints:**
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Liveness check |
-| `GET` | `/model/info` | Loaded model version and metadata |
-| `POST` | `/predict` | Single-customer churn prediction |
+
+| Method | Path             | Description                          |
+| ------ | ---------------- | ------------------------------------ |
+| `GET`  | `/health`        | Liveness check                       |
+| `GET`  | `/model/info`    | Loaded model version and metadata    |
+| `POST` | `/predict`       | Single-customer churn prediction     |
 | `POST` | `/predict/batch` | Batch prediction (list of customers) |
+
 
 **Example request:**
 
@@ -390,13 +394,15 @@ experiment/*  ← throwaway model experiments
 
 *Populated after running the full pipeline.*
 
-| Model | AUC-ROC | F1 | Precision | Recall |
-|---|---|---|---|---|
-| Logistic Regression (baseline) | — | — | — | — |
-| Random Forest | — | — | — | — |
-| XGBoost | — | — | — | — |
-| LightGBM | — | — | — | — |
-| **Best model** | — | — | — | — |
+
+| Model                          | AUC-ROC | F1  | Precision | Recall |
+| ------------------------------ | ------- | --- | --------- | ------ |
+| Logistic Regression (baseline) | —       | —   | —         | —      |
+| Random Forest                  | —       | —   | —         | —      |
+| XGBoost                        | —       | —   | —         | —      |
+| LightGBM                       | —       | —   | —         | —      |
+| **Best model**                 | —       | —   | —         | —      |
+
 
 Key SHAP findings *(populated after Pipeline 3)*:
 
