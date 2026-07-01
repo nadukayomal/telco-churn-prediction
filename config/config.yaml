@@ -1,0 +1,133 @@
+project:
+  name: "telco-churn-prediction"
+  version: "0.1.0"
+  description: "End-to-end churn prediction pipeline for telecom customer retention"
+  owner: "data-science-team"
+  environment: "development"
+
+paths:
+  root_dir: "."
+  data:
+    raw: "data/raw/Telco-Customer-Churn.csv"
+    processed_dir: "data/processed"
+    missing_handled: "data/processed/handled_missing_value.csv"
+    transformed: "data/processed/preprocessed_transformed_data.csv"
+    splits:
+      x_train: "data/processed/X_train.npz"
+      x_test: "data/processed/X_test.npz"
+      y_train: "data/processed/Y_train.npz"
+      y_test: "data/processed/Y_test.npz"
+  artifacts:
+    root: "artifacts"
+    figures: "artifacts/figures"
+    reports: "artifacts/reports"
+    model: "artifacts/model"
+    metrics: "artifacts/metrics"
+    logs: "artifacts/logs"
+
+columns:
+  target: "Churn"
+  id_column: "customerID"
+  drop_columns:
+    - "customerID"
+  categorical_features:
+    - "gender"
+    - "Partner"
+    - "Dependents"
+    - "PhoneService"
+    - "MultipleLines"
+    - "InternetService"
+    - "OnlineSecurity"
+    - "OnlineBackup"
+    - "DeviceProtection"
+    - "TechSupport"
+    - "StreamingTV"
+    - "StreamingMovies"
+    - "Contract"
+    - "PaperlessBilling"
+    - "PaymentMethod"
+    - "SeniorCitizen"
+  numeric_features:
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+
+preprocessing:
+  missing_values:
+    numeric_strategy: "median"
+    categorical_strategy: "most_frequent"
+  scaling:
+    method: "standard"
+    enabled: true
+  encoding:
+    categorical_strategy: "one_hot"
+    handle_unknown: "ignore"
+  feature_engineering:
+    enabled: true
+    create_interactions: false
+  class_imbalance:
+    enabled: true
+    strategy: "smote"
+    sampling_strategy: "auto"
+  dtype_casting:
+    - column: "TotalCharges"
+      from: "object"
+      to: "float"
+
+
+
+modeling:
+  random_state: 42
+  test_size: 0.2
+  cv_folds: 5
+  evaluation_metric: "roc_auc"
+  models:
+    - "logistic_regression"
+    - "random_forest"
+    - "xgboost"
+    - "lightgbm"
+  threshold_optimization:
+    enabled: true
+    metric: "f1"
+    search_grid:
+      - 0.3
+      - 0.5
+      - 0.7
+
+training:
+  use_pipeline: true
+  cross_validation:
+    n_splits: 5
+    shuffle: true
+  hyperparameter_tuning:
+    enabled: true
+    method: "random_search"
+    n_iter: 20
+    scoring: "roc_auc"
+
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "roc_auc"
+    - "pr_auc"
+  threshold:
+    optimize_for: "f1"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "artifacts/logs/training.log"
+
+experiment_tracking:
+  mlflow:
+    enabled: true
+    tracking_uri: "file:./artifacts/mlruns"
+    experiment_name: "telco-churn-prediction"
+
+reproducibility:
+  random_state: 42
+  numpy_seed: 42
+  python_hash_seed: 42
