@@ -62,6 +62,14 @@ preprocessing:
   encoding:
     categorical_strategy: "one_hot"
     handle_unknown: "ignore"
+  feature_binning:
+    tenure:
+      freshers: [0, 12]
+      medium: [12, 48]
+      loyal: [48, 200]
+    churn:
+      yes: [1]
+      no: [0]
   feature_engineering:
     enabled: true
     create_interactions: false
@@ -73,6 +81,8 @@ preprocessing:
     - column: "TotalCharges"
       from: "object"
       to: "float"
+  drop_columns:
+    columns: "customerID"
 
 modeling:
   random_state: 42

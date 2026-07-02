@@ -7,6 +7,7 @@ import logging
 import pandas as pd
 import numpy as np
 from ast import Dict, List
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class DropColumns:
