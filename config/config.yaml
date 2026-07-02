@@ -54,8 +54,8 @@ columns:
 
 preprocessing:
   missing_values:
-    numeric_strategy: "median"
-    categorical_strategy: "most_frequent"
+    columns : "TotalCharges"
+    strategy: "Drop"
   scaling:
     method: "standard"
     enabled: true
@@ -73,8 +73,6 @@ preprocessing:
     - column: "TotalCharges"
       from: "object"
       to: "float"
-
-
 
 modeling:
   random_state: 42

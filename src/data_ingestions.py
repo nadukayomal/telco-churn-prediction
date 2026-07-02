@@ -1,9 +1,20 @@
-"""
-This file include all about data igesstion part
-    - Load csv
-    - Load excel
+from calendar import c
+import os
+import numpy as np
+import pandas as pd
+import warnings
+from abc import ABC, abstractmethod
 
-"""
+class DataIngestor(ABC):
+    @abstractmethod
+    def data_ingest(self, file_path):
+        pd.DataFrame()
 
-class DataIngestions:
-    pass
+
+class DataIngestorCSV(DataIngestor):
+    def data_ingest(self, file_path):
+        return pd.read_csv(file_path)
+
+class DataIngestorExcel(DataIngestor):
+    def data_ingest(self, file_path):
+        return pd.read_excel(file_path)
