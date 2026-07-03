@@ -42,3 +42,4 @@ class BinaryBinnig(BinningStrategy):
 
         df[f"{column}"] = df[column].apply(assign_bin)
         logging.INFO(f"Applied binary binning for {column}")
+        

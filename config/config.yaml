@@ -60,8 +60,30 @@ preprocessing:
     method: "standard"
     enabled: true
   encoding:
-    categorical_strategy: "one_hot"
-    handle_unknown: "ignore"
+    ordinal_features:
+      Contract:
+        Month-to-month: 0
+        One year: 1 
+        Two year: 2
+      TenureBin:
+        Freshers: 0
+        Medium: 1
+        Loyal: 2
+    nominal_features:
+      - 'gender'
+      - 'Partner'
+      - 'Dependents'
+      - 'PhoneService'
+      - 'MultipleLines'
+      - 'InternetService'
+      - 'OnlineSecurity'
+      - 'OnlineBackup'
+      - 'DeviceProtection'
+      - 'TechSupport'
+      - 'StreamingTV'
+      - 'StreamingMovies'
+      - 'PaperlessBilling'
+      - 'PaymentMethod'
   feature_binning:
     tenure:
       freshers: [0, 12]
