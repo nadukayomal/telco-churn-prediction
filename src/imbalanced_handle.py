@@ -6,7 +6,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# befor ned to split data
+
 
 class ImbalanceStrategy(ABC):
     abstractmethod
