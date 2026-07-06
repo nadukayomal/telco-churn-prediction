@@ -39,7 +39,7 @@ class ModelInference:
         data (dict): Single customer's raw feature values.
 
     Return the prediction is customer Churn or Retain with probability
-    
+
     """
     def __init__(self, model_path):
         self.model_path = model_path
@@ -54,6 +54,13 @@ class ModelInference:
         self.model = joblib.load(self.model_path)
 
     def load_encoder(self, encoder_dir):
+        """
+        Load per-feature encoders from a directory of JSON files.
+
+        Each file is expected to be named "<feature_name>_encoder.json"
+        and is loaded into `self.encoders[feature_name]`
+        
+        """
         for file in os.listdir(encoder_dir):
             feature_name = file.split('_encoder.json')[0]
             with open(os.path.join(encoder_dir, file)) as f:
