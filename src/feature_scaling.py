@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from abc import ABC, abstractmethod , anstractmethod 
+from abc import ABC, abstractmethod
 from typing import List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
