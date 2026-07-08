@@ -15,6 +15,7 @@ Stages:
 
 """
 
+from ntpath import exists
 import os
 import sys
 import logging
@@ -44,25 +45,77 @@ def build_data_pipeline (
                         force_rebuild : bool = False
                         ):
 
+    # Loading config
     data_path_config = get_path()
     data_preprocess_config = get_preprocessing()
     columns_config = get_columns()
 
     """Data Ingestions part"""
 
-    print("Data ingestions process")
+    print("1. Data ingestions process started ........")
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     raw_data_path = data_path_config.get("data", {}).get("raw", {}) or data_path
 
     if isinstance(raw_data_path, str) and not os.path.isabs(raw_data_path):
         raw_data_path = os.path.join(root_dir, raw_data_path)
     
-    #  Set the path where processed data exist 
+    #  Set the path where processed data & artifacts exist 
     processed_data_dir = os.path.join(
-                                        os.path.dirname(__file__),
-                                        "..",
-                                        data_path_config.get("data", {}).get("processed_dir")
+                                    os.path.dirname(__file__),
+                                    "..",
+                                    data_path_config.get("data", {}).get("processed_dir")
                                     )
+    artifact_dir = os.path.join(
+                                os.path.dirname(__file__), 
+                                "..", 
+                                data_path_config.get("artifacts", {}).get("root", {})
+                                )
+
+
+    X_train_path = os.path.join(artifact_dir, "X_train.csv")
+    X_test_path = os.path.join(artifact_dir, "X_test.csv")
+    Y_train_path = os.path.join(artifact_dir, "Y_train.csv")
+    Y_test_path = os.path.join(artifact_dir, "Y_test.csv")
+
+    # Check all path are already avilable and is it ok read splited train, test
+    all_paths_exist = os.path.exists(X_train_path) and \
+                        os.path.exists(X_test_path) and \
+                        os.path.exists(Y_train_path) and \
+                        os.path.exists(Y_test_path)
+
+    if all_paths_exist:
+        X_train = pd.read_csv(X_train_path)
+        X_test = pd.read_csv(X_test_path)
+        Y_train = pd.read_csv(Y_train_path)
+        Y_test = pd.read_csv(Y_test_path)
+    
+    os.makedirs(artifact_dir, exist_ok=True)
+
+
+    ingestor = DataIngestorCSV()
+    df = ingestor.data_ingest(raw_data_path)
+    print(f"Data loaded Shape : {df.shape}")
+
+    """ Handle data type conversion and unnecessary column removal """
+
+    print("2. Column removal & cast process started...")
+    # Remove unnecessary columns 
+    removable_columns = data_preprocess_config.get("drop_columns", {}).get("columns", {})
+    column_remover = DropColumns(columns = removable_columns, df = df)
+    df = column_remover.drop()
+
+    # Cast column's data type
+    columns_to_cast = data_preprocess_config.get("dtype_casting", {})
+    column_casting = DataTypeConvertor(columns = columns_to_cast)
+    df =  column_casting.casting(df = df)
+
+    """ Handling missing value """
+
+    print("3. Misiing value handle process started ..........")
+    drop_columns = data_preprocess_config.get("missing_values", {}).get("columns", {})
+    drop_missing_value = DropMissingValueStrategy(drop_columns = drop_columns)
+    # Calling method to drop missing value count
+    df = drop_missing_value.handle_missing_value(df)
 
 
 
