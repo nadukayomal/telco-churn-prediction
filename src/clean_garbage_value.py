@@ -18,23 +18,29 @@ class DropColumns:
 
     def drop(self):
         cleaned_df = self.df.drop(columns=self.columns)
-        logging.INFO(f"Drop {self.columns} feature from the data set")
+        logging.info(f"Drop {self.columns} feature from the data set")
         return cleaned_df
 
 
 class DataTypeConvertor:
     """ Cast columns to their expected type """
-    def __init__(self, columns: Dict, df: pd.DataFrame):
+    def __init__(self, columns: Dict):
         self.columns = columns
-        self.df = df
 
-    def casting_column(self):
-        for col, d_type in self.columns.items():
-            if d_type == "object":
-                self.df[col] = self.df[col].astype(object)
-                logging.INFO(f"Casted the {col} data type into {d_type}")
-            if d_type == "int":
-                self.df[col] = self.df[col].astype(int)
-                logging.INFO(f"Casted the {col} data type into {d_type}")
+    def casting(self, df):
+        for data in self.columns:
+            col = data["column"].strip()
+            from_type = data["from"].strip()
+            to_type = data["to"].strip()
 
-        return self.df
+            if to_type == "object":
+                df[col] = df[col].astype(object)
+                logging.info(f"Casted the {col} data type into {to_type}")
+            if to_type == "int":
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+                logging.info(f"Casted the {col} data type into {to_type}")
+            if to_type == "float":
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+                logging.info(f"Casted the {col} data type into {to_type}")
+
+        return df
