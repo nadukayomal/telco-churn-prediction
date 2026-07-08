@@ -47,6 +47,11 @@ else
 	@echo "To activate the virtual environment, run: source .tcp/bin/activate"
 endif
 
+data-pipeline:
+	@echo "Start running data pipeline..."
+	@$(VENV_PY) ml_pipeline/data_pipeline.py
+	@echo "Data pipeline completed successfully!"
+
 clean :
 	@echo "Cleaning up..."
 	@if exist $(VENV_DIR) rmdir /s /q $(VENV_DIR)
