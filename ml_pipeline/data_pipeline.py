@@ -20,6 +20,7 @@ import os
 import sys
 import logging
 import json
+from matplotlib.cm import binary
 import pandas as pd
 import numpy as np
 from typing import Dict, Optional
@@ -52,7 +53,7 @@ def build_data_pipeline (
 
     """Data Ingestions part"""
 
-    print("1. Data ingestions process started ........")
+    print("\n1. Data ingestions process started ..........")
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     raw_data_path = data_path_config.get("data", {}).get("raw", {}) or data_path
 
@@ -95,11 +96,11 @@ def build_data_pipeline (
     ingestor = DataIngestorCSV()
     df = ingestor.data_ingest(raw_data_path)
     print(f"Data loaded Shape : {df.shape}")
+    print(df.head(3))
 
     """ Handle data type conversion and unnecessary column removal """
 
-    print("2. Column removal & cast process started...")
-    # Remove unnecessary columns 
+    print("\n2. Column removal & cast process started ..........") 
     removable_columns = data_preprocess_config.get("drop_columns", {}).get("columns", {})
     column_remover = DropColumns(columns = removable_columns, df = df)
     df = column_remover.drop()
@@ -111,15 +112,47 @@ def build_data_pipeline (
 
     """ Handling missing value """
 
-    print("3. Misiing value handle process started ..........")
+    print("\n3. Misiing value handle process started ..........")
     drop_columns = data_preprocess_config.get("missing_values", {}).get("columns", {})
     drop_missing_value = DropMissingValueStrategy(drop_columns = drop_columns)
-    # Calling method to drop missing value count
     df = drop_missing_value.handle_missing_value(df)
+    print("\n",df.head(3))
 
+    """ Handle feature binnings """
 
+    print("\n4. Feature binning process started ..........")
+    custom_binning_definition = (
+                                data_preprocess_config
+                                .get("feature_binning", {})
+                                .get("custom", {})
+                                .get("tenure", {})
+                                )
+    custom_binning = CustomBinningStrategy(binning_definition = custom_binning_definition)
+    df = custom_binning.bin_feature(column = "tenure", df = df)
+    print(f"\n{df.head(3)}")
 
+    binary_binning_definition = (
+                                data_preprocess_config
+                                .get("feature_binning", {})
+                                .get("binary", {})
+                                .get("Churn", {})
+                                )
+    binary_binning = BinaryBinnig(binning_definition = binary_binning_definition)
+    df = binary_binning.bin_feature(column = "Churn", df = df)
+    print(f"\n{df.head(3)}")
 
+    """ Handle feature encodeing """
+
+    print("\n5. Feature encoding process started ..........")
+    nominal_columns = (data_preprocess_config.get("encoding", {}).get("nominal_features", {}))
+    nominal_encoding = NominalEncodingStrategy(nominal_columns = nominal_columns)
+    df = nominal_encoding.encode(df = df)
+    print(f"\n{df.head(3)}")
+
+    ordinal_column = (data_preprocess_config.get("encoding", {}).get("ordinal_features", {}))
+    ordinal_encoding = OrdialEncodingStrategy(ordinal_columns = ordinal_column)
+    df = ordinal_encoding.encode(df = df)
+    print(f"\n{df.head(3)}")
 
 
     """ Bellow are remove later only for validate """
