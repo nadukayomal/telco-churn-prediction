@@ -57,6 +57,9 @@ preprocessing:
     columns : "TotalCharges"
     strategy: "Drop"
   scaling:
+    features:
+      - MonthlyCharges
+      - TotalCharges
     method: "standard"
     enabled: true
   encoding:
@@ -107,6 +110,8 @@ preprocessing:
       to: "float"
   drop_columns:
     columns: "customerID"
+  split:
+    test_size : 0.2
 
 modeling:
   random_state: 42
