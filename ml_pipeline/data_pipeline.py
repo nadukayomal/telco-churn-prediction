@@ -32,10 +32,10 @@ from missing_value_handle import DropMissingValueStrategy
 from clean_garbage_value import DropColumns, DataTypeConvertor
 from feature_binning import CustomBinningStrategy, BinaryBinnig
 from feature_encoding import NominalEncodingStrategy, OrdialEncodingStrategy
-from feature_scaling import StandardScaler
+from feature_scaling import StandardScaleration
 from data_splitter import SimpleTrainTestSplitStrategy
 from imbalanced_handle import SmoteImbalanceHander
-from config import get_path, get_preprocessing, get_logging, get_columns
+from config import get_path, get_preprocessing, get_logging, get_columns, get_reproducibility
 
 
 
@@ -50,6 +50,7 @@ def build_data_pipeline (
     data_path_config = get_path()
     data_preprocess_config = get_preprocessing()
     columns_config = get_columns()
+    reproducibility_config = get_reproducibility()
 
     """Data Ingestions part"""
 
@@ -96,7 +97,7 @@ def build_data_pipeline (
     ingestor = DataIngestorCSV()
     df = ingestor.data_ingest(raw_data_path)
     print(f"Data loaded Shape : {df.shape}")
-    print(df.head(3))
+    # print(df.head(3))
 
     """ Handle data type conversion and unnecessary column removal """
 
@@ -116,7 +117,7 @@ def build_data_pipeline (
     drop_columns = data_preprocess_config.get("missing_values", {}).get("columns", {})
     drop_missing_value = DropMissingValueStrategy(drop_columns = drop_columns)
     df = drop_missing_value.handle_missing_value(df)
-    print("\n",df.head(3))
+    # print("\n",df.head(3))
 
     """ Handle feature binnings """
 
@@ -129,7 +130,7 @@ def build_data_pipeline (
                                 )
     custom_binning = CustomBinningStrategy(binning_definition = custom_binning_definition)
     df = custom_binning.bin_feature(column = "tenure", df = df)
-    print(f"\n{df.head(3)}")
+    # print(f"\n{df.head(3)}")
 
     binary_binning_definition = (
                                 data_preprocess_config
@@ -139,7 +140,7 @@ def build_data_pipeline (
                                 )
     binary_binning = BinaryBinnig(binning_definition = binary_binning_definition)
     df = binary_binning.bin_feature(column = "Churn", df = df)
-    print(f"\n{df.head(3)}")
+    # print(f"\n{df.head(3)}")
 
     """ Handle feature encodeing """
 
@@ -147,13 +148,40 @@ def build_data_pipeline (
     nominal_columns = (data_preprocess_config.get("encoding", {}).get("nominal_features", {}))
     nominal_encoding = NominalEncodingStrategy(nominal_columns = nominal_columns)
     df = nominal_encoding.encode(df = df)
-    print(f"\n{df.head(3)}")
+    # print(f"\n{df.head(3)}")
 
     ordinal_column = (data_preprocess_config.get("encoding", {}).get("ordinal_features", {}))
     ordinal_encoding = OrdialEncodingStrategy(ordinal_columns = ordinal_column)
     df = ordinal_encoding.encode(df = df)
-    print(f"\n{df.head(3)}")
+    # print(f"\n{df.head(3)}")
 
+    """ Handle feature scaling """
+
+    print("\n6. Feature scaling process started ..........")
+    scaling_features = (data_preprocess_config.get("scaling", {}).get("features", {}))
+    standing_scaling = StandardScaleration()
+    df = standing_scaling.scale(df = df , columns = scaling_features)
+    # print(f"\n{df.head(3)}")
+    
+    """ Data splitting """
+
+    print("\n7. Data splitting process started ..........")
+    test_size = (data_preprocess_config.get("split", {}).get("test_size", {}))
+    splitting_data = SimpleTrainTestSplitStrategy(test_size = test_size)
+    X_train, X_test, Y_train, Y_test = splitting_data.split_data(df = df , target_column = "Churn")
+
+    """ Handle Imbalance """
+
+    print("\n8. Imbalance handle process started ..........")
+    random_state = reproducibility_config.get("random_state", {})
+    handling_imbalance = SmoteImbalanceHander(random_state = random_state)
+    X_train_resample, Y_train_resample = handling_imbalance.handle(X_train, Y_train)
+
+    # Save splitted data
+    X_train_resample.to_csv(X_train_path, index = False)
+    X_test.to_csv(X_test_path, index = False)
+    Y_train_resample.to_csv(Y_train_path, index = False)
+    Y_test.to_csv(Y_test_path, index = False)
 
     """ Bellow are remove later only for validate """
     # print("Every compoent has on preprocesing path")
