@@ -55,3 +55,7 @@ def get_logging():
 def get_experiment_tracking():
     config = load_config()
     return config.get('experiment_tracking', {})
+
+def get_reproducibility():
+    config = load_config()
+    return config.get('reproducibility', {})
