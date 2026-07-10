@@ -177,22 +177,13 @@ def build_data_pipeline (
     handling_imbalance = SmoteImbalanceHander(random_state = random_state)
     X_train_resample, Y_train_resample = handling_imbalance.handle(X_train, Y_train)
 
+    """ Save data on apath """
     # Save splitted data
     X_train_resample.to_csv(X_train_path, index = False)
     X_test.to_csv(X_test_path, index = False)
     Y_train_resample.to_csv(Y_train_path, index = False)
     Y_test.to_csv(Y_test_path, index = False)
-
-    """ Bellow are remove later only for validate """
-    # print("Every compoent has on preprocesing path")
-    # for key, val in data_preprocess_config.items():
-    #     print(key)
-    # print("\nEvery compoent has on data path")
-    # for key, val in data_path_config.items():
-    #     print(key)
-    # print("\nEvery compoent has on columns")
-    # for key, val in columns_config.items():
-    #     print(key)
-    # print(raw_data_path)
-
-build_data_pipeline()
+    print("\n9. Data saved on path ..........\n")
+   
+if __name__ == "__main__":
+    build_data_pipeline()
