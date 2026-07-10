@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from enum import Enum
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -15,8 +16,11 @@ class ScalingStrategy(ABC):
     def scale(self, df, columns):
         pass
 
+class ScalingType(str, Enum):
+    MINMAX = 'minmax'
+    STANDARD = 'standard'
 
-class StandardScaler(ScalingStrategy):
+class StandardScaleration(ScalingStrategy):
     def __init__(self):
         self.scaler = StandardScaler()
         self.fitted = False
@@ -24,7 +28,7 @@ class StandardScaler(ScalingStrategy):
     def scale(self, df : pd.DataFrame, columns : List):
         df[columns] = self.scaler.fit_transform(df[columns])
         self.fitted = True
-        logging.INFO(f"Applied Standard Scaling for {columns} features")
+        logging.info(f"Applied Standard Scaling for {columns} features")
         return df
 
     def get_scaler(self):
