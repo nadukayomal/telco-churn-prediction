@@ -27,4 +27,5 @@ class SimpleTrainTestSplitStrategy(DataSplittingStrategy):
                                                             Y, 
                                                             test_size = self.test_size
                                                             )
+        logging.info(f"Data splitted X_train : {X_train.shape} X_test : {X_test.shape} Y_train : {Y_train.shape} Y_test : {Y_test.shape}")
         return X_train, X_test, Y_train, Y_test
