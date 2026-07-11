@@ -3,7 +3,6 @@ import logging
 import joblib
 import pandas as pd
 import numpy as np
-from typing import Str, List
 
 logging.basicConfig(
                         level=logging.INFO,
@@ -19,7 +18,7 @@ class ModelTrainer:
 
     def save_model(self, model, file_path):
         joblib.dump(model, file_path)
-        logging.INFO(f"Save model {file_path} file path")
+        logging.info(f"Save model {file_path} file path")
 
     def load_model(self, file_path):
         return joblib.load(file_path)
