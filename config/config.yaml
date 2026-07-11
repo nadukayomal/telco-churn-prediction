@@ -19,12 +19,24 @@ paths:
       y_test: "data/processed/Y_test.npz"
   artifacts:
     root: "artifacts"
+    data:
+      X_train: "artifacts/X_train.csv"
+      X_test: "artifacts/X_test.csv"
+      Y_train: "artifacts/Y_train.csv"
+      Y_test: "artifacts/Y_test.csv"
     figures: "artifacts/figures"
     reports: "artifacts/reports"
     model: "artifacts/model"
     metrics: "artifacts/metrics"
     logs: "artifacts/logs"
-
+  model:
+    model_path: "model/telco_churn_analysis.joblib"
+    model_params:
+      max_depth: 10
+      n_estimators: 100
+      min_samples_split: 2
+      min_samples_leaf: 1  
+      random_state: 42  
 columns:
   target: "Churn"
   id_column: "customerID"
