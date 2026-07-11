@@ -57,6 +57,11 @@ training-pipeline:
 	@$(VENV_PY) ml_pipeline/training_pipeline.py
 	@echo "Training pipeline completed successfully!"
 
+inference-pipeline:
+	@echo "Start running inference pipeline..."
+	@$(VENV_PY) ml_pipeline/inference_pipeline.py
+	@echo "Inference pipeline completed successfully!"
+
 clean :
 	@echo "Cleaning up..."
 	@if exist $(VENV_DIR) rmdir /s /q $(VENV_DIR)

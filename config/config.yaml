@@ -25,6 +25,7 @@ paths:
       Y_train: "artifacts/Y_train.csv"
       Y_test: "artifacts/Y_test.csv"
     figures: "artifacts/figures"
+    encode: "artifacts/encode"
     reports: "artifacts/reports"
     model: "artifacts/model"
     metrics: "artifacts/metrics"
