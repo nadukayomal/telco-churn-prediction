@@ -1,11 +1,10 @@
 import os
 import logging
-from google.auth import default
 import joblib
 import numpy as np
 import pandas as pd
 from abc import ABC, abstractmethod
-from typing import String, List
+from typing import List
 from sklearn.ensemble import RandomForestClassifier
 logging.basicConfig(level = logging.INFO , format = '%(asctime)s - %(levelname)s - %(message)s')
 
@@ -22,7 +21,7 @@ class BaseModelBuilder(ABC):
         - model_name
         - kwargs : every parameter has on different models
     """
-    def __init__(self, model_name : String, **kwargs):
+    def __init__(self, model_name , **kwargs):
         self.model_name = model_name
         self.model = None
         self.model_params = kwargs
@@ -55,8 +54,8 @@ class RandomForestModelBuilder(BaseModelBuilder):
         super().__init__('RandomForest', **default_params)
     
     def build_model(self):
-        self.model = RandomForestClassifier(self.model_params)
-        logging.INFO(f"Building {self.model_name} model")
+        self.model = RandomForestClassifier(**self.model_params)
+        logging.info(f"Building {self.model_name} model")
         return self.model
 
         
