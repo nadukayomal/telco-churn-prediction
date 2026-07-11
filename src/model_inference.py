@@ -1,27 +1,25 @@
-from nt import error
-from shlex import join
-import os, sys
+import os
+import sys
 import json
-from tkinter import Y
-import joblib
 import logging
-import numpy as np
+
+import joblib
 import pandas as pd
-from typing import Dict, Any, Tuple, Optional
+from sklearn.preprocessing import StandardScaler
 
-from pandas.io.xml import preprocess_data
-
-from feature_binning import CustomBinningStrategy, BinaryBinnig
-from feature_encoding import OrdialEncodingStrategy, NominalEncodingStrategy
+from feature_binning import CustomBinningStrategy
+from feature_encoding import OrdialEncodingStrategy
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
-from config import get_preprocessing
+from config import get_preprocessing, get_path
+
 logging.basicConfig(
-                    level=logging.INFO, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-                    )
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 
 class ModelInference:
@@ -31,21 +29,22 @@ class ModelInference:
         - Load the model
         - Encode the data
         - Apply feature binning
-        - Predict the result againts the unseen data
+        - Predict the result against the unseen data
 
-    Args :
+    Args:
         model_path (str): Path to the joblib-serialized model file.
-        ncoder_dir (str): Directory containing encoder JSON files.
+        encoder_dir (str): Directory containing encoder JSON files.
         data (dict): Single customer's raw feature values.
 
-    Return the prediction is customer Churn or Retain with probability
-
+    Returns the prediction whether customer Churn or Retain with probability.
     """
     def __init__(self, model_path):
         self.model_path = model_path
         self.binning_config = get_preprocessing().get("feature_binning", {})
         self.encoding_config = get_preprocessing().get("encoding", {})
         self.encoders = {}
+        self.scaler = None
+        self.feature_columns = None
         self.load_model()
 
     def load_model(self):
@@ -58,49 +57,83 @@ class ModelInference:
         Load per-feature encoders from a directory of JSON files.
 
         Each file is expected to be named "<feature_name>_encoder.json"
-        and is loaded into `self.encoders[feature_name]`
-        
+        and is loaded into `self.encoders[feature_name]`.
         """
         for file in os.listdir(encoder_dir):
-            feature_name = file.split('_encoder.json')[0]
+            if not file.endswith("_encoder.json"):
+                continue
+            feature_name = file.replace("_encoder.json", "")
             with open(os.path.join(encoder_dir, file)) as f:
-                self.encoders[feature_name] = join.load(f)
+                self.encoders[feature_name] = json.load(f)
+
+    def _resolve_path(self, path):
+        if os.path.isabs(path):
+            return path
+        return os.path.join(ROOT_DIR, path)
+
+    def _load_training_metadata(self):
+        if self.feature_columns is not None and self.scaler is not None:
+            return
+
+        x_train_path = self._resolve_path(
+            get_path().get("artifacts", {}).get("data", {}).get("X_train")
+        )
+        X_train = pd.read_csv(x_train_path)
+        self.feature_columns = X_train.columns.tolist()
+
+        scaling_features = get_preprocessing().get("scaling", {}).get("features", [])
+        self.scaler = StandardScaler()
+        self.scaler.fit(X_train[scaling_features])
+
+    def _apply_one_hot_encoding(self, df):
+        nominal_columns = self.encoding_config.get("nominal_features", [])
+        for column in nominal_columns:
+            dummies = pd.get_dummies(df[column], prefix=column, dtype=int)
+            saved_columns = self.encoders.get(column, [])
+            for col in saved_columns:
+                if col not in dummies.columns:
+                    dummies[col] = 0
+            if saved_columns:
+                dummies = dummies[saved_columns]
+            df = pd.concat([df.drop(columns=[column]), dummies], axis=1)
+        return df
 
     def preprocess_input(self, data):
         df = pd.DataFrame([data])
-        binnig_features = get_preprocessing().get("feature_binning", {})
-        encoding_features = get_preprocessing().get("encoding", {})
 
-        for col, encoder in self.encoders.items():
-            df[col] = df[col].map(encoder)
-        
-        #  Preproces input data in feature binning calling feature binning class
-        custom_binning = CustomBinningStrategy(binnig_features.get("tenure", {})) 
-        binary_binning = BinaryBinnig(binnig_features.get("churn", {}))
-        #  Apply binning data into the inputed Data Frame 
-        df = custom_binning.bin_feature(df, 'tenure')
-        df = binary_binning.bin_feature(df, 'churn')
-        #  Preprocess data calling feature encoding class
-        ordinal_encoding = OrdialEncodingStrategy(encoding_features.get("ordinal_features", {}))
-        nominal_encoding = NominalEncodingStrategy(encoding_features.get("nominal_features", {})) 
-        #  Apply encoding data into inputed Data Frame
+        for cast in get_preprocessing().get("dtype_casting", []):
+            col = cast.get("column")
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        custom_binning_definition = self.binning_config.get("custom", {}).get("tenure", {})
+        custom_binning = CustomBinningStrategy(custom_binning_definition)
+        df = custom_binning.bin_feature(column="tenure", df=df)
+
+        df = self._apply_one_hot_encoding(df)
+
+        ordinal_features = self.encoding_config.get("ordinal_features", {})
+        ordinal_encoding = OrdialEncodingStrategy(ordinal_features)
         df = ordinal_encoding.encode(df)
-        df = nominal_encoding.encode(df)
-        #  Drop the unnecessary columns
-        df = df.drop(columns = ["customerID"])
 
-        return df
-    
+        self._load_training_metadata()
+        scaling_features = get_preprocessing().get("scaling", {}).get("features", [])
+        df[scaling_features] = self.scaler.transform(df[scaling_features])
+
+        if "customerID" in df.columns:
+            df = df.drop(columns=["customerID"])
+
+        return df.reindex(columns=self.feature_columns, fill_value=0)
+
     def predict(self, data):
         processed_input = self.preprocess_input(data)
         Y_pred = self.model.predict(processed_input)
-        Y_proba = float(self.model.predict_proba(processed_input)[0,1])
+        Y_proba = float(self.model.predict_proba(processed_input)[0, 1])
 
         Y_pred = "Churn" if Y_pred == 1 else "Retain"
-        Y_proba = round(Y_proba * 100,2)
+        Y_proba = round(Y_proba * 100, 2)
 
         return {
-                "Status" : Y_pred,
-                "Confidence" : f"{Y_proba}%"
-                }
-
+            "Status": Y_pred,
+            "Confidence": f"{Y_proba}%"
+        }

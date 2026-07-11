@@ -1,6 +1,5 @@
 import os
 import logging
-from google.auth import default
 import joblib
 import numpy as np
 import pandas as pd
