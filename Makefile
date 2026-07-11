@@ -52,6 +52,11 @@ data-pipeline:
 	@$(VENV_PY) ml_pipeline/data_pipeline.py
 	@echo "Data pipeline completed successfully!"
 
+training-pipeline:
+	@echo "Start running training pipeline..."
+	@$(VENV_PY) ml_pipeline/training_pipeline.py
+	@echo "Training pipeline completed successfully!"
+
 clean :
 	@echo "Cleaning up..."
 	@if exist $(VENV_DIR) rmdir /s /q $(VENV_DIR)
