@@ -171,13 +171,27 @@ logging:
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file: "artifacts/logs/training.log"
 
-experiment_tracking:
-  mlflow:
-    enabled: true
-    tracking_uri: "file:./artifacts/mlruns"
-    experiment_name: "telco-churn-prediction"
+# experiment_tracking:
+#   mlflow:
+#     enabled: true
+#     tracking_uri: "file:./artifacts/mlruns"
+#     experiment_name: "telco-churn-prediction"
 
 reproducibility:
   random_state: 42
   numpy_seed: 42
   python_hash_seed: 42
+
+mlflow:
+  tracking_uri: "sqlite:///mlflow.db"
+  experiment_name: "Telco Churn Analysis"
+  model_registry_name: "telco_churn_prediction"
+  artifact_path: "model"
+  run_name_prefix: "telco_churn_run"
+  tags:
+    project: "customer_churn_prediction"
+    team: "ml_engineering"
+    environment: "development"
+  autolog: true
+
+  
