@@ -1,8 +1,4 @@
-from calendar import c
-import os
-import numpy as np
 import pandas as pd
-import warnings
 from abc import ABC, abstractmethod
 
 class DataIngestor(ABC):

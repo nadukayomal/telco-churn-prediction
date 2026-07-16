@@ -7,7 +7,7 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
-
+from mlflow_utils import MLflowTracker, setup_mlflow_autolog, create_mlflow_run_tags
 from model_training import ModelTrainer
 from model_building import RandomForestModelBuilder 
 from model_evalution import ModelEvaluators
@@ -37,6 +37,18 @@ def training_pipeline(
     model_path = get_path().get("model",{})["model_path"]
     model_params = get_path().get("model",{})["model_params"]
     processed_data_path = get_path().get("artifacts", {}).get("data", {})
+
+    """ mlflow define """
+    mlflow_tracker = MLflowTracker()
+    setup_mlflow_autolog()
+    run_tags = create_mlflow_run_tags(
+                                    "training_pipeline",{
+                                        "model_type" : "Random Forest",
+                                        "training-strategy" : "simple"
+                                        }
+                                    )
+    run = mlflow_tracker.start_run(run_name = "training_pipeline", tags = run_tags)
+    """ mlflow define end """
 
     # If not exist processed data then re-run data pipeline to generate data set
     if not os.path.exists(processed_data_path["X_train"]) or\
@@ -68,13 +80,17 @@ def training_pipeline(
         # Evaluate model
         evaluator = ModelEvaluators(model, "RandomForest")
         evaluation_result = evaluator.evaluate(X_test, Y_test)
-        # evaluation_result_cp = evaluation_result.copy()
+        evaluation_result_cp = evaluation_result.copy()
+        evaluation_result_cp.pop("cm", None)
 
-        print(evaluation_result)
+        # print(evaluation_result)
+
+    # Mlflow tracking part
+    mlflow_tracker.log_training_metrics(model, evaluation_result_cp, model_params)
+    mlflow_tracker.end_run()
 
 if __name__ == "__main__":
     model_path = get_path().get("model",{})["model_path"]
     model_params = get_path().get("model",{})["model_params"]
     # processed_data_path = get_path().get("artifacts", {}).get("data", {})
     training_pipeline(model_params=model_params)
-

@@ -15,17 +15,16 @@ Stages:
 
 """
 
-from ntpath import exists
 import os
 import sys
-import logging
-import json
-from matplotlib.cm import binary
 import pandas as pd
-import numpy as np
-from typing import Dict, Optional
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "utils"))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+for path in (os.path.join(ROOT_DIR, "utils"), os.path.join(ROOT_DIR, "src")):
+    if path not in sys.path:
+        sys.path.append(path)
+
+from mlflow_utils import MLflowTracker, setup_mlflow_autolog, create_mlflow_run_tags
 
 from data_ingestions import DataIngestorCSV
 from missing_value_handle import DropMissingValueStrategy
@@ -35,8 +34,7 @@ from feature_encoding import NominalEncodingStrategy, OrdialEncodingStrategy
 from feature_scaling import StandardScaleration
 from data_splitter import SimpleTrainTestSplitStrategy
 from imbalanced_handle import SmoteImbalanceHander
-from config import get_path, get_preprocessing, get_logging, get_columns, get_reproducibility
-
+from config import get_path, get_preprocessing, get_logging, get_columns, get_reproducibility  
 
 
 def build_data_pipeline (
@@ -45,12 +43,18 @@ def build_data_pipeline (
                         test_size : float = 0.2, 
                         force_rebuild : bool = False
                         ):
-
+ 
     # Loading config
     data_path_config = get_path()
     data_preprocess_config = get_preprocessing()
     columns_config = get_columns()
     reproducibility_config = get_reproducibility()
+
+    # Data versions
+    mlflow_tracker = MLflowTracker()
+    setup_mlflow_autolog()
+    run_tags = create_mlflow_run_tags("data_pipeline", {"data_source" : data_path})
+    run = mlflow_tracker.start_run(run_name = "data_pipeline", tags = run_tags)
 
     """Data Ingestions part"""
 
@@ -90,7 +94,7 @@ def build_data_pipeline (
         X_test = pd.read_csv(X_test_path)
         Y_train = pd.read_csv(Y_train_path)
         Y_test = pd.read_csv(Y_test_path)
-    
+
     os.makedirs(artifact_dir, exist_ok=True)
 
 
@@ -177,13 +181,26 @@ def build_data_pipeline (
     handling_imbalance = SmoteImbalanceHander(random_state = random_state)
     X_train_resample, Y_train_resample = handling_imbalance.handle(X_train, Y_train)
 
-    """ Save data on apath """
+    """ Save data on a path """
     # Save splitted data
     X_train_resample.to_csv(X_train_path, index = False)
     X_test.to_csv(X_test_path, index = False)
     Y_train_resample.to_csv(Y_train_path, index = False)
     Y_test.to_csv(Y_test_path, index = False)
     print("\n9. Data saved on path ..........\n")
+
+    """ Store dataset metadata (sample counts and artifact paths) in MLflow """
+    mlflow_tracker.log_data_pipeline_metrics({
+                                            'total_samples' : len(X_train) + len(X_test),
+                                            'train_sample' : len(X_train),
+                                            'test_sample' : len(X_test),
+                                            'x_train_path' : X_train_path,
+                                            'x_test_path' : X_test_path,
+                                            'y_train_path' : Y_train_path,
+                                            'y_test_path' : Y_test_path
+                                            })
+
+    mlflow_tracker.end_run()
    
 if __name__ == "__main__":
     build_data_pipeline()
