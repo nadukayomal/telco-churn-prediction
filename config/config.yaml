@@ -184,6 +184,7 @@ reproducibility:
 
 mlflow:
   tracking_uri: "sqlite:///mlflow.db"
+  # tracking_uri: "file:./mlruns"
   experiment_name: "Telco Churn Analysis"
   model_registry_name: "telco_churn_prediction"
   artifact_path: "model"
@@ -194,4 +195,4 @@ mlflow:
     environment: "development"
   autolog: true
 
-  
+

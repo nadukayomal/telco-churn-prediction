@@ -1,12 +1,6 @@
-import configparser
 import os
-from unittest import result
-import warnings
-import yaml
 import logging
-
-from datetime import datetime
-from typing import Dict, Any, List
+import yaml
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s -%(levelname)s -%(message)s')
 logger = logging.getLogger(__name__)
@@ -59,3 +53,7 @@ def get_experiment_tracking():
 def get_reproducibility():
     config = load_config()
     return config.get('reproducibility', {})
+
+def get_mlflow():
+    config = load_config()
+    return config.get("mlflow", {})
